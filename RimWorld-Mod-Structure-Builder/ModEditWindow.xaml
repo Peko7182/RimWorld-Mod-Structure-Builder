@@ -1,0 +1,486 @@
+<Window x:Class="RimWorld_Mod_Structure_Builder.ModEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:RimWorld_Mod_Structure_Builder"
+        mc:Ignorable="d"
+        Title="Mod Editor" Height="600" Width="900"
+        Closing="ModEditWindow_OnClosing"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <!-- Global Styles -->
+        <ResourceDictionary>
+            <!-- ~1~ Converters @1@ -->
+            <!-- <local:AlternatingBackgroundConverter x:Key="AlternatingBackgroundConverter"  -->
+            <!--                                     EvenBackground="#FFE8E8FF"  -->
+            <!--                                     OddBackground="#FFD8D8F0"/> -->
+
+            <!-- Button Style -->
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+            <Style x:Key="ActionButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="#FF4A76B8" />
+                <Setter Property="Foreground" Value="White" />
+                <Setter Property="BorderBrush" Value="{x:Null}" />
+                <Setter Property="Padding" Value="12,8" />
+                <Setter Property="Height" Value="30"/>
+                <Setter Property="Margin" Value="0,5" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="3">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FF5B87C9" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter Property="Background" Value="#FF3A66A8" />
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Background" Value="#FF888888" />
+                                    <Setter Property="Opacity" Value="0.7" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- Text Box Style -->
+            <Style x:Key="ReadOnlyTextBoxStyle" TargetType="TextBox">
+                <Setter Property="IsReadOnly" Value="True" />
+                <Setter Property="Margin" Value="0,0,0,8" />
+                <Setter Property="Padding" Value="5,3" />
+                <Setter Property="Background" Value="WhiteSmoke" />
+                <Setter Property="BorderBrush" Value="#FFCCCCCC" />
+            </Style>
+
+            <!-- Label Text Style -->
+            <Style x:Key="LabelTextStyle" TargetType="TextBlock">
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Margin" Value="0,5,0,2" />
+                <Setter Property="Foreground" Value="#FF444444" />
+            </Style>
+
+            <!-- DataGrid Styles -->
+            <Style x:Key="ModDataGridStyle" TargetType="DataGrid">
+                <Setter Property="Background" Value="#FFE8E8FF" />
+                <Setter Property="AlternatingRowBackground" Value="#FFD8D8F0" />
+                <Setter Property="BorderBrush" Value="#FFCCCCCC" />
+                <Setter Property="HorizontalGridLinesBrush" Value="#FFCCCCCC" />
+                <Setter Property="VerticalGridLinesBrush" Value="#FFCCCCCC" />
+                <Setter Property="RowHeaderWidth" Value="0" />
+                <Setter Property="AutoGenerateColumns" Value="False" />
+                <Setter Property="CanUserAddRows" Value="False" />
+                <Setter Property="IsReadOnly" Value="True" />
+                <Setter Property="Margin" Value="5" />
+            </Style>
+
+            <Style x:Key="ModDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+                <Setter Property="Background" Value="#FFD0D0D0" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Padding" Value="8" />
+                <Setter Property="BorderBrush" Value="#FFAAAAAA" />
+                <Setter Property="BorderThickness" Value="0,0,1,1" />
+            </Style>
+
+            <!-- GroupBox Style -->
+            <Style x:Key="ModGroupBoxStyle" TargetType="GroupBox">
+                <Setter Property="BorderBrush" Value="#FFBBBBBB" />
+                <Setter Property="Padding" Value="8" />
+                <Setter Property="Margin" Value="0,0,0,10" />
+                <Setter Property="HeaderTemplate">
+                    <Setter.Value>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Path=.}" FontWeight="SemiBold" Foreground="#FF444444" Margin="5,0" />
+                        </DataTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- TabItem Style -->
+            <Style x:Key="ModTabItemStyle" TargetType="TabItem">
+                <Setter Property="Padding" Value="12,5" />
+                <Setter Property="Background" Value="#FFE0E0E0" />
+                <Setter Property="BorderBrush" Value="#FFBBBBBB" />
+                <Setter Property="BorderThickness" Value="1,1,1,0" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabItem">
+                            <Border x:Name="Border" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4,4,0,0" Margin="0,0,2,0">
+                                <ContentPresenter x:Name="ContentSite" ContentSource="Header"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Background" Value="White" TargetName="Border" />
+                                    <Setter Property="BorderThickness" Value="1,1,1,0" TargetName="Border" />
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#FFF0F0F0" TargetName="Border" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel - Mod Details -->
+        <Border Grid.Column="0" Background="#FFE0E0E0" Padding="15" Margin="5">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,13,0">
+                <StackPanel>
+                    <Border BorderBrush="Gray" BorderThickness="1" Height="180" Width="180"
+                            Margin="0,0,0,15" Background="White" HorizontalAlignment="Center">
+                        <Grid>
+                            <Image Source="{Binding ModIconPath, Mode=OneWay}" Stretch="Uniform"
+                                   MouseDown="ModIcon_Pressed" />
+                            <TextBlock Text="Click to change icon" HorizontalAlignment="Center"
+                                       VerticalAlignment="Bottom" Margin="0,0,0,5" FontStyle="Italic"
+                                       Foreground="#FF666666" FontSize="10"
+                                       Visibility="{Binding HasModIcon, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Mod Name (Editable) -->
+                    <TextBlock Text="Mod Name" Style="{StaticResource LabelTextStyle}" />
+                    <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,0,0,12" Padding="5,3" />
+
+                    <!-- Version -->
+                    <TextBlock Text="Mod Version" Style="{StaticResource LabelTextStyle}" />
+                    <TextBox Text="{Binding Version, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <!-- ID -->
+                    <TextBlock Text="ID" Style="{StaticResource LabelTextStyle}" />
+                    <TextBox Text="{Binding Id, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <!-- Authors -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Authors" Style="{StaticResource LabelTextStyle}" />
+                        <Button Grid.Column="1" Content="+" Width="24" Height="24"
+                                Click="AddAuthor_Click" ToolTip="Add Author" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding Authors}" Margin="0,0,0,12">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding Path=Name, UpdateSourceTrigger=PropertyChanged}" Padding="5,3" Background="WhiteSmoke" />
+                                    <Button Grid.Column="1" Content="×" Width="24" Height="24"
+                                            Click="RemoveAuthor_Click" Tag="{Binding}"
+                                            ToolTip="Remove Author" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Supported Game Versions -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Supported Game Versions" Style="{StaticResource LabelTextStyle}" />
+                        <Button Grid.Column="1" Content="+" Width="24" Height="24"
+                                Click="AddVersion_Click" ToolTip="Add Version" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding SupportedVersions}" Margin="0,0,0,12" MaxHeight="120">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding Path=Version, UpdateSourceTrigger=PropertyChanged}" Padding="5,3" Background="WhiteSmoke" />
+                                    <Button Grid.Column="1" Content="×" Width="24" Height="24"
+                                            Click="RemoveVersion_Click" Tag="{Binding}"
+                                            ToolTip="Remove Version" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- URL -->
+                    <TextBlock Text="URL" Style="{StaticResource LabelTextStyle}" />
+                    <TextBox Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,0,0,12" Padding="5,3" />
+
+                    <!-- Backup Option -->
+                    <CheckBox x:Name="BackupCheckBox" Content="Create Backup on Save"
+                              Margin="0,5,0,10" HorizontalAlignment="Left"
+                              IsChecked="True" />
+
+                    <!-- Action Buttons -->
+                    <Button Content="SAVE CHANGES" Style="{StaticResource ActionButtonStyle}"
+                            Click="SaveChanges_Click" />
+                    <!-- <Button Content="EXPORT MOD" Style="{StaticResource ActionButtonStyle}" -->
+                    <!--         Background="#FF6B8E23" Click="ExportMod_Click"/> -->
+                    <Button Content="CANCEL" Style="{StaticResource ActionButtonStyle}"
+                            Background="#FF8B0000" Click="Cancel_Click" Margin="0,5,0,0" />
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Right Panel - Mod Content -->
+        <DockPanel Grid.Column="1" Margin="5">
+            <!-- Mod Header -->
+            <Border DockPanel.Dock="Top" Background="#FFCCCCCC" Padding="10" Margin="0,0,0,10">
+                <Grid>
+                    <TextBlock Text="{Binding Name, FallbackValue='MOD NAME'}"
+                               FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" Foreground="#FF444444" />
+                    <TextBlock Text="{Binding Version, StringFormat='v{0}', FallbackValue='v1.0'}"
+                               HorizontalAlignment="Right" VerticalAlignment="Center"
+                               Margin="0,0,10,0" Foreground="#FF666666" />
+                </Grid>
+            </Border>
+
+            <!-- Description Section -->
+            <GroupBox Header="Descriptions" DockPanel.Dock="Top" Style="{StaticResource ModGroupBoxStyle}"
+                      MaxHeight="180">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ListView ItemsSource="{Binding Descriptions}" Background="#FFEFEFEF"
+                              BorderBrush="#FFDDDDDD" Margin="0,0,5,0">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="3" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#FFDDDDDD" BorderThickness="0,0,0,1"
+                                        Padding="8" Margin="0,1"
+                                        Background="{Binding RelativeSource={RelativeSource AncestorType=ListViewItem}, Path=Background}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Version, StringFormat='v{0}', FallbackValue='vX.X'}"
+                                                   FontWeight="Bold" Margin="0,0,10,0"
+                                                   VerticalAlignment="Top" Foreground="#FF333333" />
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Description, FallbackValue='Description preview...'}"
+                                                   TextWrapping="Wrap" VerticalAlignment="Top" Foreground="#FF333333" />
+                                        <Button Grid.Column="2" Content="Edit" Width="40" Height="22"
+                                                Click="EditDescription_Click" Tag="{Binding}" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <StackPanel Grid.Column="1">
+                        <Button Content="Add" Width="60" Height="30" Margin="0,0,0,5"
+                                Click="AddDescription_Click" />
+                        <Button Content="Remove" Width="60" Height="30"
+                                Click="RemoveDescription_Click" />
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+
+            <!-- Tab Control for Dependencies -->
+            <TabControl Margin="0,5,0,0" BorderBrush="#FFBBBBBB">
+                <TabItem Header="Dependencies" Style="{StaticResource ModTabItemStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <DataGrid ItemsSource="{Binding ModDependencies}" Style="{StaticResource ModDataGridStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="*" MinWidth="100" />
+                                <DataGridTextColumn Header="Display Name"
+                                                    Binding="{Binding DisplayName, FallbackValue='N/A'}" Width="*"
+                                                    MinWidth="150" />
+                                <DataGridTextColumn Header="Version (if specific)"
+                                                    Binding="{Binding Version, FallbackValue='Any'}" Width="Auto"
+                                                    MinWidth="100" />
+                                <DataGridTemplateColumn Header="Steam Workshop URL" Width="*" MinWidth="150">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Margin="5,0">
+                                                <Hyperlink NavigateUri="{Binding SteamWorkshopUrl}"
+                                                           RequestNavigate="Hyperlink_RequestNavigate">
+                                                    <TextBlock Text="{Binding SteamWorkshopUrl}"
+                                                               TextTrimming="CharacterEllipsis" />
+                                                </Hyperlink>
+                                            </TextBlock>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Edit" Width="40" Margin="2"
+                                                        Click="EditDependency_Click" Tag="{Binding}" />
+                                                <Button Content="X" Width="30" Margin="2"
+                                                        Click="RemoveDependency_Click" Tag="{Binding}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Button Grid.Row="1" Content="Add Dependency" HorizontalAlignment="Right"
+                                Width="120" Height="30" Margin="0,8,5,5"
+                                Click="AddDependency_Click" />
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Incompatible Mods" Style="{StaticResource ModTabItemStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <DataGrid ItemsSource="{Binding IncompatibleMods}" Style="{StaticResource ModDataGridStyle}">
+                            <DataGrid.RowStyle>
+                                <Style TargetType="DataGridRow">
+                                    <Setter Property="Background" Value="#FFFFE0E0" />
+                                </Style>
+                            </DataGrid.RowStyle>
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="*" MinWidth="150" />
+                                <DataGridTextColumn Header="Version (if specific)"
+                                                    Binding="{Binding Version, FallbackValue='Any'}" Width="Auto"
+                                                    MinWidth="120" />
+                                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Edit" Width="40" Margin="2"
+                                                        Click="EditIncompatible_Click" Tag="{Binding}" />
+                                                <Button Content="X" Width="30" Margin="2"
+                                                        Click="RemoveIncompatible_Click" Tag="{Binding}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Button Grid.Row="1" Content="Add Incompatible Mod" HorizontalAlignment="Right"
+                                Width="150" Height="30" Margin="0,8,5,5"
+                                Click="AddIncompatible_Click" />
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Load Before" Style="{StaticResource ModTabItemStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <DataGrid ItemsSource="{Binding LoadBefore}" Style="{StaticResource ModDataGridStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="*" MinWidth="150" />
+                                <DataGridTextColumn Header="Version (if specific)"
+                                                    Binding="{Binding Version, FallbackValue='Any'}" Width="Auto"
+                                                    MinWidth="120" />
+                                <DataGridCheckBoxColumn Header="Forced" Binding="{Binding Forced}" Width="Auto"
+                                                        MinWidth="60" />
+                                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Edit" Width="40" Margin="2"
+                                                        Click="EditLoadBefore_Click" Tag="{Binding}" />
+                                                <Button Content="X" Width="30" Margin="2"
+                                                        Click="RemoveLoadBefore_Click" Tag="{Binding}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Button Grid.Row="1" Content="Add Load Before" HorizontalAlignment="Right"
+                                Width="120" Height="30" Margin="0,8,5,5"
+                                Click="AddLoadBefore_Click" />
+                    </Grid>
+                </TabItem>
+
+                <TabItem Header="Load After" Style="{StaticResource ModTabItemStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <DataGrid ItemsSource="{Binding LoadAfter}" Style="{StaticResource ModDataGridStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="*" MinWidth="150" />
+                                <DataGridTextColumn Header="Version (if specific)"
+                                                    Binding="{Binding Version, FallbackValue='Any'}" Width="Auto"
+                                                    MinWidth="120" />
+                                <DataGridCheckBoxColumn Header="Forced" Binding="{Binding Forced}" Width="Auto"
+                                                        MinWidth="60" />
+                                <DataGridTemplateColumn Header="Actions" Width="Auto">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="Edit" Width="40" Margin="2"
+                                                        Click="EditLoadAfter_Click" Tag="{Binding}" />
+                                                <Button Content="X" Width="30" Margin="2"
+                                                        Click="RemoveLoadAfter_Click" Tag="{Binding}" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+
+                        <Button Grid.Row="1" Content="Add Load After" HorizontalAlignment="Right"
+                                Width="120" Height="30" Margin="0,8,5,5"
+                                Click="AddLoadAfter_Click" />
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </DockPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,31 @@
+﻿<Window x:Class="RimWorld_Mod_Structure_Builder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RimWorld_Mod_Structure_Builder"
+        xmlns:infoClasses="clr-namespace:RimWorld_Mod_Structure_Builder.InfoClasses"
+        xmlns:convertors="clr-namespace:RimWorld_Mod_Structure_Builder.Convertors"
+        mc:Ignorable="d"
+        Title="RW Mod Structure Builder" Height="450" Width="800" Icon="/RW Mod Structure Builder.ico" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <convertors:AuthorsToStringConverter x:Key="AuthorsToStringConverter" />
+        <convertors:DescriptionsToStringConverter x:Key="DescriptionsToStringConverter" />
+    </Window.Resources>
+    <Grid>
+        <ListBox x:Name="ModList" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10" MouseDoubleClick="OpenModEditWindow" ItemsSource="{Binding Items}">
+            <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type infoClasses:ModInfo}">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Width="50" Height="50" Source="{Binding ModIconPath}" />
+                        <StackPanel Orientation="Vertical" Margin="10,0,0,0">
+                            <TextBlock FontWeight="Bold" Text="{Binding Name}" />
+                            <TextBlock Text="{Binding Authors, Converter={StaticResource AuthorsToStringConverter}}" />
+                            <TextBlock TextWrapping="Wrap" Text="{Binding Descriptions, Converter={StaticResource DescriptionsToStringConverter}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>
