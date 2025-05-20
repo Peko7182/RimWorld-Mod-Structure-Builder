@@ -4,7 +4,10 @@ using RimWorld_Mod_Structure_Builder.InfoClasses.Interfaces;
 
 namespace RimWorld_Mod_Structure_Builder.InfoClasses;
 
-public record DependencyInfo : IVersioned, INotifyPropertyChanged
+/// <summary>
+/// Class for storing information about mod dependency
+/// </summary>
+public sealed record DependencyInfo : IVersioned, INotifyPropertyChanged
 {
     private string _id;
     private string _version;
@@ -61,7 +64,7 @@ public record DependencyInfo : IVersioned, INotifyPropertyChanged
     }
     
     public event PropertyChangedEventHandler PropertyChanged;
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

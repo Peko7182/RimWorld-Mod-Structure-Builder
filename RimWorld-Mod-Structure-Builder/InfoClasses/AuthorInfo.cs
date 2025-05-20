@@ -3,7 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace RimWorld_Mod_Structure_Builder.InfoClasses;
 
-public record AuthorInfo : INotifyPropertyChanged
+/// <summary>
+/// Class for storing information about mod author
+/// </summary>
+public sealed record AuthorInfo : INotifyPropertyChanged
 {
     private string _name { get; set; }
 
@@ -27,7 +30,7 @@ public record AuthorInfo : INotifyPropertyChanged
     public override string ToString() => Name;
     
     public event PropertyChangedEventHandler PropertyChanged;
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

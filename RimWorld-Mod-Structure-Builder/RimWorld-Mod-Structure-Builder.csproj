@@ -62,11 +62,11 @@
     </ApplicationDefinition>
     <Compile Include="Convertors\AuthorsToStringConverter.cs" />
     <Compile Include="Convertors\DescriptionsToStringConverter.cs" />
-    <Compile Include="EditWindows\DependencyEditWindow.cs" />
-    <Compile Include="EditWindows\DescriptionEditWindow.cs" />
-    <Compile Include="EditWindows\IncompatibleModEditWindow.cs" />
-    <Compile Include="EditWindows\LoadOrderEditWindow.cs" />
     <Compile Include="EditWindows\EditWindowUtils.cs" />
+    <Compile Include="EditWindows\Windows\DependencyEditWindow.cs" />
+    <Compile Include="EditWindows\Windows\DescriptionEditWindow.cs" />
+    <Compile Include="EditWindows\Windows\IncompatibleModEditWindow.cs" />
+    <Compile Include="EditWindows\Windows\LoadOrderEditWindow.cs" />
     <Compile Include="InfoClasses\AuthorInfo.cs" />
     <Compile Include="InfoClasses\DependencyInfo.cs" />
     <Compile Include="InfoClasses\DescriptionInfo.cs" />

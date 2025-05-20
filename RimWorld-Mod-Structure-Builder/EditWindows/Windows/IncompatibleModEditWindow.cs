@@ -2,38 +2,34 @@ using System.Windows;
 using System.Windows.Controls;
 using RimWorld_Mod_Structure_Builder.InfoClasses;
 
-namespace RimWorld_Mod_Structure_Builder.EditWindows;
+namespace RimWorld_Mod_Structure_Builder.EditWindows.Windows;
 
-public class DependencyEditWindow : Window
+public class IncompatibleModEditWindow : Window
     {
-        public DependencyInfo Dependency { get; private set; }
+        public IncompatibleInfo Incompatibility { get; private set; }
         
-        public DependencyEditWindow(DependencyInfo dependency)
+        public IncompatibleModEditWindow(IncompatibleInfo incompatibility)
         {
-            Dependency = dependency;
+            Incompatibility = incompatibility;
             InitializeComponent();
-            DataContext = Dependency;
+            DataContext = Incompatibility;
         }
         
         private void InitializeComponent()
         {
-            Title = "Edit Dependency";
-            Width = 500;
-            Height = 300;
+            Title = "Edit Incompatible Mod";
+            Width = 450;
+            Height = 200;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             
             var grid = new Grid();
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             
             // Create form fields
-            EditWindowUtils.AddFormField(grid, 0, "ID:", "Id");
-            EditWindowUtils.AddFormField(grid, 1, "Display Name:", "DisplayName");
-            EditWindowUtils.AddFormField(grid, 2, "Version (leave empty for any):", "Version");
-            EditWindowUtils.AddFormField(grid, 3, "Steam Workshop URL:", "SteamWorkshopUrl");
+            EditWindowUtils.AddFormField(grid, 0, "Mod ID:", "Id");
+            EditWindowUtils.AddFormField(grid, 1, "Version (leave empty for any):", "Version");
             
             // Buttons
             var buttonPanel = new StackPanel
@@ -64,7 +60,7 @@ public class DependencyEditWindow : Window
             buttonPanel.Children.Add(saveButton);
             buttonPanel.Children.Add(cancelButton);
             
-            Grid.SetRow(buttonPanel, 4);
+            Grid.SetRow(buttonPanel, 2);
             grid.Children.Add(buttonPanel);
             
             Content = grid;
@@ -72,7 +68,7 @@ public class DependencyEditWindow : Window
         
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(Dependency.Id))
+            if (string.IsNullOrWhiteSpace(Incompatibility.Id))
             {
                 MessageBox.Show("Mod ID cannot be empty", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

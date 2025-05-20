@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using RimWorld_Mod_Structure_Builder.InfoClasses;
 
-namespace RimWorld_Mod_Structure_Builder.EditWindows;
+namespace RimWorld_Mod_Structure_Builder.EditWindows.Windows;
 
 public class DescriptionEditWindow : Window
     {

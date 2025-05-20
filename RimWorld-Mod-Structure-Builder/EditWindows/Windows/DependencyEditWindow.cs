@@ -2,24 +2,24 @@ using System.Windows;
 using System.Windows.Controls;
 using RimWorld_Mod_Structure_Builder.InfoClasses;
 
-namespace RimWorld_Mod_Structure_Builder.EditWindows;
+namespace RimWorld_Mod_Structure_Builder.EditWindows.Windows;
 
-public class LoadOrderEditWindow : Window
+public class DependencyEditWindow : Window
     {
-        public LoadOrderInfo LoadOrder { get; private set; }
+        public DependencyInfo Dependency { get; private set; }
         
-        public LoadOrderEditWindow(LoadOrderInfo loadOrder, string orderType)
+        public DependencyEditWindow(DependencyInfo dependency)
         {
-            LoadOrder = loadOrder;
-            InitializeComponent(orderType);
-            DataContext = LoadOrder;
+            Dependency = dependency;
+            InitializeComponent();
+            DataContext = Dependency;
         }
         
-        private void InitializeComponent(string orderType)
+        private void InitializeComponent()
         {
-            Title = $"Edit {orderType} Entry";
-            Width = 450;
-            Height = 230;
+            Title = "Edit Dependency";
+            Width = 500;
+            Height = 300;
             WindowStartupLocation = WindowStartupLocation.CenterOwner;
             
             var grid = new Grid();
@@ -27,22 +27,13 @@ public class LoadOrderEditWindow : Window
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             
             // Create form fields
-            EditWindowUtils.AddFormField(grid, 0, "Mod ID:", "Id");
-            EditWindowUtils.AddFormField(grid, 1, "Version (leave empty for any):", "Version");
-            
-            // Forced checkbox
-            var forcedPanel = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(10, 10, 10, 0) };
-            var forcedCheckbox = new CheckBox { Content = "Forced (hard requirement)" };
-            forcedCheckbox.SetBinding(CheckBox.IsCheckedProperty, new System.Windows.Data.Binding("Forced")
-            {
-                UpdateSourceTrigger = System.Windows.Data.UpdateSourceTrigger.PropertyChanged
-            });
-            forcedPanel.Children.Add(forcedCheckbox);
-            
-            Grid.SetRow(forcedPanel, 2);
-            grid.Children.Add(forcedPanel);
+            EditWindowUtils.AddFormField(grid, 0, "ID:", "Id");
+            EditWindowUtils.AddFormField(grid, 1, "Display Name:", "DisplayName");
+            EditWindowUtils.AddFormField(grid, 2, "Version (leave empty for any):", "Version");
+            EditWindowUtils.AddFormField(grid, 3, "Steam Workshop URL:", "SteamWorkshopUrl");
             
             // Buttons
             var buttonPanel = new StackPanel
@@ -73,7 +64,7 @@ public class LoadOrderEditWindow : Window
             buttonPanel.Children.Add(saveButton);
             buttonPanel.Children.Add(cancelButton);
             
-            Grid.SetRow(buttonPanel, 3);
+            Grid.SetRow(buttonPanel, 4);
             grid.Children.Add(buttonPanel);
             
             Content = grid;
@@ -81,7 +72,7 @@ public class LoadOrderEditWindow : Window
         
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(LoadOrder.Id))
+            if (string.IsNullOrWhiteSpace(Dependency.Id))
             {
                 MessageBox.Show("Mod ID cannot be empty", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;

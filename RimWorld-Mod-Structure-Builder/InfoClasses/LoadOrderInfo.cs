@@ -4,7 +4,10 @@ using RimWorld_Mod_Structure_Builder.InfoClasses.Interfaces;
 
 namespace RimWorld_Mod_Structure_Builder.InfoClasses;
 
-public record LoadOrderInfo : IVersioned, INotifyPropertyChanged
+/// <summary>
+/// Class for storing information about mod load order
+/// </summary>
+public sealed record LoadOrderInfo : IVersioned, INotifyPropertyChanged
 {
     private string _id;
     private string _version;
@@ -50,7 +53,7 @@ public record LoadOrderInfo : IVersioned, INotifyPropertyChanged
     }
     
     public event PropertyChangedEventHandler PropertyChanged;
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

@@ -3,7 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace RimWorld_Mod_Structure_Builder.InfoClasses;
 
-public record DescriptionInfo : INotifyPropertyChanged
+/// <summary>
+/// Class for storing information about mod description
+/// </summary>
+public sealed record DescriptionInfo : INotifyPropertyChanged
 {
     private string _version;
     private string _description;
@@ -37,7 +40,7 @@ public record DescriptionInfo : INotifyPropertyChanged
     }
     
     public event PropertyChangedEventHandler PropertyChanged;
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

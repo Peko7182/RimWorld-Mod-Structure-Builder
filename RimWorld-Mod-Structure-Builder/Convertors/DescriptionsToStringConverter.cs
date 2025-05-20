@@ -7,6 +7,9 @@ using RimWorld_Mod_Structure_Builder.InfoClasses;
 
 namespace RimWorld_Mod_Structure_Builder.Convertors;
 
+/// <summary>
+/// Converts <see cref="ObservableCollection{DescriptionInfo}"/> of <see cref="DescriptionInfo"/> to string
+/// </summary>
 public class DescriptionsToStringConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

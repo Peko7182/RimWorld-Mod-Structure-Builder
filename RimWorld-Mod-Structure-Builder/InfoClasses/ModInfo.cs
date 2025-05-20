@@ -8,7 +8,10 @@ using RimWorld_Mod_Structure_Builder.Utils;
 
 namespace RimWorld_Mod_Structure_Builder.InfoClasses;
 
-public class ModInfo : INotifyPropertyChanged
+/// <summary>
+/// Class for storing information about a mod
+/// </summary>
+public sealed class ModInfo : INotifyPropertyChanged
 {
     private string _xmlPath;
     private string _id;
@@ -174,6 +177,10 @@ public class ModInfo : INotifyPropertyChanged
     // Computed property for UI
     public bool HasModIcon => !string.IsNullOrEmpty(ModIconPath);
 
+    /// <summary>
+    /// Loads information about a mod from an About.xml file
+    /// </summary>
+    /// <param name="xmlPath">Path to the About.xml file to load</param>
     public void LoadFromXml(string xmlPath)
     {
         var xmlDoc = new XmlDocument();
@@ -296,6 +303,16 @@ public class ModInfo : INotifyPropertyChanged
             });
     }
 
+    /// <summary>
+    /// Saves this mod's information to an XML file.
+    /// </summary>
+    /// <param name="xmlPath">The path to which the XML file should be saved.</param>
+    /// <returns>
+    /// A tuple containing a boolean and a string. The boolean indicates whether the XML was saved. The string is a status message.
+    /// </returns>
+    /// <remarks>
+    /// If the XML file already exists, the method will only save the XML if it has changed. Otherwise, it will not overwrite the existing file.
+    /// </remarks>
     public (bool, string) SaveToXml(string xmlPath)
     {
         var xmlDoc = new XmlDocument();
@@ -364,7 +381,7 @@ public class ModInfo : INotifyPropertyChanged
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

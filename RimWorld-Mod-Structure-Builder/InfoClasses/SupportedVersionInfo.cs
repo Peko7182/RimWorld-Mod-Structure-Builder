@@ -3,7 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace RimWorld_Mod_Structure_Builder.InfoClasses;
 
-public record SupportedVersionInfo : INotifyPropertyChanged
+/// <summary>
+/// Class for storing information about supported version
+/// </summary>
+public sealed record SupportedVersionInfo : INotifyPropertyChanged
 {
     private string _version { get; set; }
     
@@ -27,7 +30,7 @@ public record SupportedVersionInfo : INotifyPropertyChanged
     public override string ToString() => Version;
     
     public event PropertyChangedEventHandler PropertyChanged;
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

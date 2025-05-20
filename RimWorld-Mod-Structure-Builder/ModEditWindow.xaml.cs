@@ -2,12 +2,11 @@ using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Security.Cryptography;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 using Microsoft.Win32;
-using RimWorld_Mod_Structure_Builder.EditWindows;
+using RimWorld_Mod_Structure_Builder.EditWindows.Windows;
 using RimWorld_Mod_Structure_Builder.InfoClasses;
 
 namespace RimWorld_Mod_Structure_Builder;

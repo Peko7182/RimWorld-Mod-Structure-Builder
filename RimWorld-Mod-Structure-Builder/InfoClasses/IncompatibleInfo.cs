@@ -3,7 +3,10 @@ using System.Runtime.CompilerServices;
 
 namespace RimWorld_Mod_Structure_Builder.InfoClasses;
 
-public record IncompatibleInfo : INotifyPropertyChanged
+/// <summary>
+/// Class for storing information about incompatible mod
+/// </summary>
+public sealed record IncompatibleInfo : INotifyPropertyChanged
 {
     private string _id;
     private string _version;
@@ -37,7 +40,7 @@ public record IncompatibleInfo : INotifyPropertyChanged
     }
     
     public event PropertyChangedEventHandler PropertyChanged;
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    private void OnPropertyChanged([CallerMemberName] string propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }

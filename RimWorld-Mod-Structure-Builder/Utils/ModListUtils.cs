@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace RimWorld_Mod_Structure_Builder.Utils;
 
+/// <summary>
+/// Utility class for working with mod list
+/// </summary>
 public static class ModListUtils
 {
     public static string GetAboutPath(string modPath)
