@@ -1,22 +1,20 @@
-name: .NET Framework Console Application Build
+name: .NET Console Application Build
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  RUNTIME: 'win-x64'
+  CONFIGURATION: 'Release'
 
 jobs:
   build:
-    strategy:
-      matrix:
-        configuration: [Debug, Release]
-
     runs-on: windows-latest
-
-    env:
-      Solution_Name: "RimWorld Mod Structure Builder.sln"
-      Project_Path: "RimWorld Mod Structure Builder.csproj"
 
     steps:
     - name: Checkout
@@ -24,37 +22,39 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Install MSBuild (full .NET Framework)
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    # Restore NuGet packages
-    - name: Restore NuGet packages
-      run: nuget restore "$env:Solution_Name"
+    - name: Restore dependencies
+      run: dotnet restore
 
-    # Build using .NET Framework MSBuild
-    - name: Build application
-      run: msbuild "$env:Project_Path" /p:Configuration=${{ matrix.configuration }}
+    - name: Build
+      run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
 
-    # Publish output (copy build artifacts)
-    - name: Prepare publish folder
-      if: matrix.configuration == 'Release'
-      shell: pwsh
+    - name: Test
+      run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
+    - name: Publish application
       run: |
-        New-Item -ItemType Directory -Path "publish" -Force
-        Copy-Item -Path "bin\Release\*" -Destination "publish\" -Recurse
+        dotnet publish \
+          --configuration ${{ env.CONFIGURATION }} \
+          --runtime ${{ env.RUNTIME }} \
+          --self-contained true \
+          -p:PublishSingleFile=true \
+          -p:IncludeNativeLibrariesForSelfExtract=true \
+          -o ./publish
 
-    # Upload artifacts
-    - name: Upload build artifacts
-      if: matrix.configuration == 'Release'
+    - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
-        name: RimWorld-Mod-Structure-Builder-${{ matrix.configuration }}
-        path: ./publish
+        name: RimWorld-Mod-Structure-Builder
+        path: ./publish/**/*
+        retention-days: 7
 
-    # Create GitHub Release on push to main
     - name: Create Release
-      if: matrix.configuration == 'Release' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: ncipollo/release-action@v1
       with:
         tag: v${{ github.run_number }}
