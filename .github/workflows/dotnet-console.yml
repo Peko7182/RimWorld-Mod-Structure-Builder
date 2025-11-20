@@ -5,15 +5,16 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  RUNTIME: 'win-x64'
+  CONFIGURATION: 'Release'
 
 jobs:
   build:
     runs-on: windows-latest
-
-    env:
-      Solution_Name: "RimWorld Mod Structure Builder.sln"
-      Project_Path: "RimWorld Mod Structure Builder.csproj"
-      Runtime: "win-x64"
 
     steps:
     - name: Checkout
@@ -21,38 +22,42 @@ jobs:
       with:
         fetch-depth: 0
 
-    # Setup .NET SDK
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
 
-    # Restore dependencies
     - name: Restore dependencies
-      run: dotnet restore "$env:Solution_Name"
+      run: dotnet restore
 
-    # Build and publish a single EXE
+    - name: Build
+      run: dotnet build --configuration ${{ env.CONFIGURATION }} --no-restore
+
+    - name: Test
+      run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
+
     - name: Publish application
       run: |
-        dotnet publish "$env:Project_Path" \
-          --configuration Release \
-          --runtime $env:Runtime \
+        dotnet publish \
+          --configuration ${{ env.CONFIGURATION }} \
+          --runtime ${{ env.RUNTIME }} \
           --self-contained true \
           -p:PublishSingleFile=true \
           -p:IncludeNativeLibrariesForSelfExtract=true \
           -o ./publish
 
-    # Upload artifact
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
       with:
         name: RimWorld-Mod-Structure-Builder
-        path: ./publish
+        path: ./publish/**/*
+        retention-days: 7
 
-    # Create GitHub Release
     - name: Create Release
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: ncipollo/release-action@v1
       with:
         tag: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
-        artifacts: "publish/*.exe"
+        artifacts: "publish/*"
         token: ${{ secrets.GITHUB_TOKEN }}
