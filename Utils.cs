@@ -156,7 +156,7 @@ namespace RimWorld_Mod_Structure_Builder
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\Common\Assemblies\</OutputPath>
+    <OutputPath>..\..\Common\Assemblies\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -164,7 +164,7 @@ namespace RimWorld_Mod_Structure_Builder
   <PropertyGroup Condition="" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' "">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\Common\Assemblies\</OutputPath>
+    <OutputPath>..\..\Common\Assemblies\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -205,7 +205,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17 || Created with RW Mod Structure Builder
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project(""{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}"") = ""{projectName}"", ""{projectName}.csproj"", ""{{{csProjGuid}}}""
+Project(""{{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}}"") = ""{projectName}"", ""{projectName}/{projectName}.csproj"", ""{{{csProjGuid}}}""
 EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
