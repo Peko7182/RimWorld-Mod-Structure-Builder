@@ -5,6 +5,9 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <ApplicationIcon>RW Mod Structure Builder.ico</ApplicationIcon>
+        <Authors>Peko</Authors>
+        <Company>Peko</Company>
     </PropertyGroup>
 
     <ItemGroup>
