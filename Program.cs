@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
+using Spectre.Console;
 
 namespace RimWorld_Mod_Structure_Builder
 {
@@ -11,56 +13,114 @@ namespace RimWorld_Mod_Structure_Builder
     {
         static void Main()
         {
-            Logging.Log("Welcome to the RimWorld Mod Creator!");
+            Console.OutputEncoding = Encoding.Unicode;
             
+            AnsiConsole.Write(
+                new FigletText("RimWorld Mod Creator")
+                    .Centered()
+                    .Color(Color.Cyan1));
+
             // Get RimWorld Mod Folder
             var rimWorldFolder = Utils.GetRimWorldFolder();
             var modFolder = Utils.GetRimWorldModFolder(rimWorldFolder);
-            Logging.Log($"RimWorld mod folder found: {modFolder}");
+            
+            AnsiConsole.MarkupLine($"[green]✓[/] RimWorld mod folder: [cyan]{modFolder}[/]\n");
 
             // Get Image Path
-            Logging.Info("Use 640x360 or 1280x720 PNG.");
-            Logging.Info("Must be under 1MB.");
-            Logging.Info("Non-PNG files can be used by renaming them to Preview.png.");
+            var imagePanel = new Panel(
+                new Markup("[yellow]Image Requirements:[/]\n" +
+                          "• Size: 640x360 or 1280x720 PNG\n" +
+                          "• Must be under 1MB\n" +
+                          "• Non-PNG files can be renamed to Preview.png"))
+            {
+                Header = new PanelHeader("Preview Image", Justify.Left),
+                Border = BoxBorder.Rounded,
+                BorderStyle = new Style(Color.Yellow)
+            };
+            AnsiConsole.Write(imagePanel);
+
             byte[] image = null;
             string imagePath = null;
+            
             while (true)
             {
-                imagePath = Utils.GetSingleInput("Enter your mod preview image path:", required: false);
+                imagePath = AnsiConsole.Prompt(
+                    new TextPrompt<string>("[yellow]Preview image path:[/]")
+                        .AllowEmpty());
+
                 if (string.IsNullOrEmpty(imagePath))
                 {
-                    Logging.Warn("Preview.png IS REQUIRED based on THE RIMWORLD MOD STRUCTURE WIKI. You will need to add it later.\n");
+                    AnsiConsole.MarkupLine("[yellow]⚠[/] Preview.png is [red]REQUIRED[/] per RimWorld Mod Structure Wiki. Add it later.\n");
                     break;
                 }
                 else if (File.Exists(imagePath))
                 {
                     image = File.ReadAllBytes(imagePath);
-                    if (image.ImageSize() >= 1)
-                    {
-                        Logging.Warn($"Preview.png IS OVER 1MB ({image.ImageSize()} MB). STEAM WORKSHOP UPLOAD NOT POSSIBLE.\n");
-                    }
+                    var size = image.ImageSize();
+                    AnsiConsole.MarkupLine(size >= 1
+                        ? $"[yellow]⚠[/] Preview.png is [red]OVER 1MB[/] ({size:F2} MB). Steam Workshop upload not possible.\n"
+                        : $"[green]✓[/] Image loaded successfully ({size:F2} MB)\n");
                     break;
                 }
                 else
-                    Logging.Error("The file you entered doesn't exist. Please enter a valid path.\n");
+                {
+                    AnsiConsole.MarkupLine("[red]✗[/] File not found. Please try again.\n");
+                }
             }
-            
-            // Get Mod MetaData
-            Logging.Info("No mod icon? Preview.png is used instead.");
-            Logging.Info("ModIcon.png is shown during game loading screens and in the Options UI if your mod has mod settings.");
-            Logging.Info("32x32 or 64x64 PNG file, low detail/colors are recommended.");
-            var modIcon = Utils.GetSingleInput("Enter your mod icon path:", required: false);
-            
-            var modName = Utils.GetSingleInput("Enter your mod name:");
-            var packageId = Utils.GetSingleInput("Enter your package ID (e.g., AuthorName.ModName):");
-            var authors = Utils.GetMultipleInputs("Enter the author name(s):");
-            var description = Utils.GetSingleInput("Enter a description for your mod:");
-            var supportedVersions = Utils.GetMultipleInputs("Enter the supported RimWorld versions (e.g., 1.5):");
+
+            // Get Mod Icon
+            var iconPanel = new Panel(
+                new Markup("[cyan]Icon Information:[/]\n" +
+                          "• No icon? Preview.png will be used\n" +
+                          "• Shows during loading screens & mod settings\n" +
+                          "• Recommended: 32x32 or 64x64 PNG with low detail"))
+            {
+                Header = new PanelHeader("Mod Icon", Justify.Left),
+                Border = BoxBorder.Rounded,
+                BorderStyle = new Style(Color.Cyan)
+            };
+            AnsiConsole.Write(iconPanel);
+
+            var modIcon = AnsiConsole.Prompt(
+                new TextPrompt<string>("[cyan]Mod icon path:[/]")
+                    .AllowEmpty());
+
+            // Get Mod Metadata
+            AnsiConsole.Write(new Rule("[green]Mod Information[/]").RuleStyle("green"));
+
+            var modName = AnsiConsole.Ask<string>("[green]Mod name:[/]");
+            var packageId = AnsiConsole.Ask<string>("[green]Package ID[/] [dim](e.g., AuthorName.ModName)[/]:");
+
+            var authors = new List<string>();
+            AnsiConsole.MarkupLine("[green]Author(s)[/] [dim](press Enter on empty line to finish)[/]:");
+            while (true)
+            {
+                var author = AnsiConsole.Prompt(
+                    new TextPrompt<string>($"  [dim]Author {authors.Count + 1}:[/]")
+                        .AllowEmpty());
+                if (string.IsNullOrEmpty(author)) break;
+                authors.Add(author);
+            }
+
+            var description = AnsiConsole.Ask<string>("[green]Description:[/]");
+
+            var supportedVersions = new List<string>();
+            AnsiConsole.MarkupLine("[green]Supported RimWorld versions[/] [dim](e.g., 1.5, press Enter to finish)[/]:");
+            while (true)
+            {
+                var version = AnsiConsole.Prompt(
+                    new TextPrompt<string>($"  [dim]Version {supportedVersions.Count + 1}:[/]")
+                        .AllowEmpty());
+                if (string.IsNullOrEmpty(version)) break;
+                supportedVersions.Add(version);
+            }
 
             XElement modMetaData = new XElement("ModMetaData",
                 new XElement("packageId", packageId),
                 new XElement("name", modName),
-                authors.Count == 1 ? new XElement("author", authors[0]) : new XElement("authors", authors.Select(author => new XElement("li", author))),
+                authors.Count == 1 
+                    ? new XElement("author", authors[0]) 
+                    : new XElement("authors", authors.Select(author => new XElement("li", author))),
                 new XElement("description", description),
                 new XElement("supportedVersions", supportedVersions.Select(version => new XElement("li", version)))
             );
@@ -68,45 +128,72 @@ namespace RimWorld_Mod_Structure_Builder
             // Optional parameters
             var modVersion = "0.0.0.1";
             modMetaData.AddIfNotNullOrEmpty("modVersion", modVersion);
-            modMetaData.AddIfNotNullOrEmpty("url", Utils.GetSingleInput("Enter the URL (e.g., GitHub, etc.):", required: false));
+            
+            var url = AnsiConsole.Prompt(
+                new TextPrompt<string>("[blue]URL[/] [dim](GitHub, etc.)[/]:")
+                    .AllowEmpty());
+            modMetaData.AddIfNotNullOrEmpty("url", url);
 
             // Optional parameters - Mod Dependencies
-            if (Utils.GetYesNoInput("Do you want to add mod dependencies? (Optional)"))
+            if (AnsiConsole.Confirm("[blue]Add mod dependencies?[/]", false))
             {
                 XElement modDependencies = new XElement("modDependencies");
-                while (true)
+                var addingDeps = true;
+                
+                while (addingDeps)
                 {
-                    var dependencyId = Utils.GetSingleInput("Enter dependency package ID:", required: false);
+                    var dependencyId = AnsiConsole.Prompt(
+                        new TextPrompt<string>("  [blue]Dependency package ID:[/]")
+                            .AllowEmpty());
+                    
                     if (string.IsNullOrEmpty(dependencyId))
                         break;
-                    
-                    var dependencyDisplayName = Utils.GetSingleInput("Enter dependency display name:");
-                    var steamWorkshopUrl = Utils.GetSingleInput("Enter dependency Steam Workshop URL:");
-                    
+
+                    var dependencyDisplayName = AnsiConsole.Ask<string>("  [blue]Display name:[/]");
+                    var steamWorkshopUrl = AnsiConsole.Ask<string>("  [blue]Steam Workshop URL:[/]");
+
                     XElement dependency = new XElement("li",
                         new XElement("packageId", dependencyId),
                         new XElement("displayName", dependencyDisplayName),
                         new XElement("steamWorkshopUrl", steamWorkshopUrl)
                     );
                     modDependencies.Add(dependency);
+                    
+                    addingDeps = AnsiConsole.Confirm("  [dim]Add another dependency?[/]", true);
                 }
-                modMetaData.Add(modDependencies);
+                
+                if (modDependencies.HasElements)
+                    modMetaData.Add(modDependencies);
             }
-            
-            // Optional parameters - Load Before, Load After, Incompatible With
-            foreach (var (name, elementName) in new[] { ("load before", "loadBefore"), ("load after", "loadAfter"), ("incompatible with", "incompatibleWith") })
+
+            // Optional parameters - Load Order & Incompatibilities
+            var loadOrderTypes = new[] 
+            { 
+                ("load before", "loadBefore", "Load Before"), 
+                ("load after", "loadAfter", "Load After"), 
+                ("incompatible with", "incompatibleWith", "Incompatible With") 
+            };
+
+            foreach (var (desc, elementName, displayName) in loadOrderTypes)
             {
-                if (Utils.GetYesNoInput($"Do you want to add {name} dependencies? (Optional)"))
+                if (AnsiConsole.Confirm($"[blue]Add {desc} dependencies?[/]", false))
                 {
                     XElement dependencies = new XElement(elementName);
+                    
                     while (true)
                     {
-                        var dependencyId = Utils.GetSingleInput($"Enter {name} package ID:", required: false);
+                        var dependencyId = AnsiConsole.Prompt(
+                            new TextPrompt<string>($"  [blue]{displayName} package ID:[/]")
+                                .AllowEmpty());
+                        
                         if (string.IsNullOrEmpty(dependencyId))
                             break;
+                        
                         dependencies.Add(new XElement("li", dependencyId));
                     }
-                    modMetaData.Add(dependencies);
+                    
+                    if (dependencies.HasElements)
+                        modMetaData.Add(dependencies);
                 }
             }
 
@@ -114,44 +201,38 @@ namespace RimWorld_Mod_Structure_Builder
             var newModFolder = Path.Combine(modFolder, modName);
             while (Directory.Exists(newModFolder))
             {
-                Logging.Error("Mod folder already exists. Please enter a new name:");
-                modName = Utils.GetSingleInput("Enter a new mod name:");
+                AnsiConsole.MarkupLine("[red]✗[/] Mod folder already exists!");
+                modName = AnsiConsole.Ask<string>("[yellow]Enter a new mod name:[/]");
                 newModFolder = Path.Combine(modFolder, modName);
             }
-            Utils.CreateDirectory(newModFolder);
 
-            // Create mod folder structure
-            var folders = new List<string> { "Assemblies", "Defs", "Languages", "Patches", "Sounds", "Textures" };
-
-            // Create About folder in the main ModFolder
-            Utils.CreateDirectory(Path.Combine(newModFolder, "About"));
+            // Create structure with progress
+            Directory.CreateDirectory(newModFolder);
             
-            // Create a Visual Studio project if requested
-            var visualStudioProject = Utils.GetYesNoInput("Do you want to create a Visual Studio project?");
+            var folders = new List<string> { "Assemblies", "Defs", "Languages", "Patches", "Sounds", "Textures" };
+            Directory.CreateDirectory(Path.Combine(newModFolder, "About"));
+
+            // Visual Studio project
+            var visualStudioProject = AnsiConsole.Confirm("[magenta]Create Visual Studio project?[/]");
+            
             if (visualStudioProject)
             {
-                // Create Common folder
                 var commonPath = Path.Combine(newModFolder, "Common");
-                Utils.CreateDirectory(commonPath);
-                
-                // Create Source folder
+                Directory.CreateDirectory(commonPath);
+
                 var sourcePath = Path.Combine(newModFolder, "Source");
-                Utils.CreateDirectory(sourcePath);
+                Directory.CreateDirectory(sourcePath);
 
-                // Create folders inside Common folder
-                folders.ForEach(f => Utils.CreateDirectory(Path.Combine(commonPath, f)));
+                folders.ForEach(f => Directory.CreateDirectory(Path.Combine(commonPath, f)));
 
-                // Create Visual Studio Project
                 var projectName = modName.Replace(" ", "");
-
                 Utils.CreateVisualStudioProject(projectName, modName, modVersion, description, authors, rimWorldFolder, sourcePath);
 
-                Logging.Success($"Visual Studio project created successfully in '{sourcePath}'.");
+                AnsiConsole.MarkupLine($"[green]✓[/] Visual Studio project created in [cyan]{sourcePath}[/]");
             }
             else
             {
-                // Create folders in ModFolder
-                folders.ForEach(f => Utils.CreateDirectory(Path.Combine(newModFolder, f)));
+                folders.ForEach(f => Directory.CreateDirectory(Path.Combine(newModFolder, f)));
             }
 
             // Save About.xml
@@ -162,7 +243,7 @@ namespace RimWorld_Mod_Structure_Builder
             if (!string.IsNullOrEmpty(imagePath))
                 File.Copy(imagePath, Path.Combine(newModFolder, "About", "Preview.png"));
             else
-                Logging.Warn("Don't forget to add a preview image.");
+                AnsiConsole.MarkupLine("[yellow]⚠[/] Don't forget to add Preview.png");
 
             // Save ModIcon.png
             if (!string.IsNullOrEmpty(modIcon))
@@ -170,38 +251,78 @@ namespace RimWorld_Mod_Structure_Builder
             else if (!string.IsNullOrEmpty(imagePath))
                 File.Copy(imagePath, Path.Combine(newModFolder, "About", "ModIcon.png"));
             else
-                Logging.Warn("Don't forget to add a mod icon.");
+                AnsiConsole.MarkupLine("[yellow]⚠[/] Don't forget to add ModIcon.png");
 
-            Logging.Success($"Mod structure created successfully in '{newModFolder}'.");
-
-            // Show information about mod structure
-            var infoMessages = new List<string>
+            // Success message
+            var successPanel = new Panel(
+                new Markup($"[green]Mod structure created successfully![/]\n\n" +
+                          $"[cyan]Location:[/] {newModFolder}"))
             {
-                "Assemblies: Add custom code to RimWorld in the form of compiled dynamic-link library or DLL files.",
-                "Defs: XML Definitions or Defs are the primary content definition and configuration source for RimWorld.",
-                "Languages: Localization and translations for Defs and code-referenced text.",
-                "Patches: Modify Defs from the vanilla game, DLCs, or even other mods in a safe and interoperable manner.",
-                "Sounds: Custom sound files for mods. Use Ogg, MP3, or WAV files.",
-                "Textures: Custom texture files for mods. Use PNG files."
+                Header = new PanelHeader("✓ Success", Justify.Center),
+                Border = BoxBorder.Double,
+                BorderStyle = new Style(Color.Green)
             };
-            infoMessages.ForEach(Logging.Info);
+            AnsiConsole.Write(successPanel);
 
-            // Open RimWorld wiki
-            if (Utils.GetYesNoInput("Do you want to see the RimWorld Wiki for mod folder structure?"))
+            // Show folder information
+            var table = new Table()
+                .Border(TableBorder.Rounded)
+                .BorderColor(Color.Blue)
+                .AddColumn(new TableColumn("[blue]Folder[/]").Centered())
+                .AddColumn(new TableColumn("[blue]Description[/]"));
+
+            var folderInfo = new []
             {
-                Process.Start("https://rimworldwiki.com/wiki/Modding_Tutorials/Mod_Folder_Structure");
+                ( "Assemblies", "Custom code in compiled DLL files" ),
+                ( "Defs", "XML Definitions for content configuration" ),
+                ( "Languages", "Localization and translations" ),
+                ( "Patches", "Modify Defs from vanilla game or mods" ),
+                ( "Sounds", "Custom sound files (Ogg, MP3, WAV)" ),
+                ( "Textures", "Custom texture files (PNG)")
+            };
+
+            foreach (var (folder, desc) in folderInfo)
+            {
+                table.AddRow($"[cyan]{folder}[/]", $"[dim]{desc}[/]");
             }
 
-            // Open mod folder and about file
-            Process.Start(newModFolder);
-            Process.Start(Path.Combine(newModFolder, "About", "About.xml"));
-            
-            // Open Visual Studio project
-            if (visualStudioProject)
-                Process.Start(Utils.FirstFoundFile(Path.Combine(newModFolder, "Source"), "*.sln"));
+            AnsiConsole.Write(table);
 
-            // Exit
-            Environment.FailFast(string.Empty);
+            // Final actions
+            if (AnsiConsole.Confirm("\n[blue]Open RimWorld Wiki for mod folder structure?[/]"))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "https://rimworldwiki.com/wiki/Modding_Tutorials/Mod_Folder_Structure",
+                    UseShellExecute = true
+                });
+            }
+
+            AnsiConsole.MarkupLine("\n[green]Opening mod folder...[/]");
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = newModFolder,
+                UseShellExecute = true
+            });
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = Path.Combine(newModFolder, "About", "About.xml"),
+                UseShellExecute = true
+            });
+
+            var slnFile = Utils.FirstFoundFile(Path.Combine(newModFolder, "Source"), "*.sln");
+            if (!string.IsNullOrEmpty(slnFile))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = slnFile,
+                    UseShellExecute = true
+                });
+            }
+
+            AnsiConsole.MarkupLine("\n[green]Press any key to exit...[/]");
+            Console.ReadKey();
         }
     }
 }

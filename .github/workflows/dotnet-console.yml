@@ -1,0 +1,63 @@
+name: .NET Framework Console Application Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        configuration: [Debug, Release]
+
+    runs-on: windows-latest
+
+    env:
+      Solution_Name: "RimWorld Mod Structure Builder.sln"
+      Project_Path: "RimWorld Mod Structure Builder.csproj"
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # Install MSBuild (full .NET Framework)
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    # Restore NuGet packages
+    - name: Restore NuGet packages
+      run: nuget restore "$env:Solution_Name"
+
+    # Build using .NET Framework MSBuild
+    - name: Build application
+      run: msbuild "$env:Project_Path" /p:Configuration=${{ matrix.configuration }}
+
+    # Publish output (copy build artifacts)
+    - name: Prepare publish folder
+      if: matrix.configuration == 'Release'
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Path "publish" -Force
+        Copy-Item -Path "bin\Release\*" -Destination "publish\" -Recurse
+
+    # Upload artifacts
+    - name: Upload build artifacts
+      if: matrix.configuration == 'Release'
+      uses: actions/upload-artifact@v4
+      with:
+        name: RimWorld-Mod-Structure-Builder-${{ matrix.configuration }}
+        path: ./publish
+
+    # Create GitHub Release on push to main
+    - name: Create Release
+      if: matrix.configuration == 'Release' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      uses: ncipollo/release-action@v1
+      with:
+        tag: v${{ github.run_number }}
+        name: Release v${{ github.run_number }}
+        artifacts: "publish/*.exe"
+        token: ${{ secrets.GITHUB_TOKEN }}
