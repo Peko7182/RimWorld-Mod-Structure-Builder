@@ -37,7 +37,7 @@ jobs:
       run: dotnet test --configuration ${{ env.CONFIGURATION }} --no-build --verbosity normal
 
     - name: Publish application
-      run: dotnet publish --configuration ${{ env.CONFIGURATION }} --runtime ${{ env.RUNTIME }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:CopyOutputSymbolsToPublishDirectory=false -p:EnableCompressionInSingleFile=true -o ./publish
+      run: dotnet publish --configuration ${{ env.CONFIGURATION }} --runtime ${{ env.RUNTIME }} --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish
 
     - name: Upload build artifact
       uses: actions/upload-artifact@v4
@@ -52,5 +52,5 @@ jobs:
       with:
         tag: v${{ github.run_number }}
         name: Release v${{ github.run_number }}
-        artifacts: "publish/*"
+        artifacts: "publish/*.exe"
         token: ${{ secrets.GITHUB_TOKEN }}
