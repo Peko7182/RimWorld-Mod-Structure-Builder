@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
+using Spectre.Console;
 
 namespace RimWorld_Mod_Structure_Builder
 {
@@ -16,7 +17,6 @@ namespace RimWorld_Mod_Structure_Builder
         /// <returns>The image size in MB</returns>
         public static float ImageSize(this byte[] image) => (float)image.Length / 1024 / 1024;
 
-        
         /// <summary>
         /// Adds the element with the given name and value to the XElement
         /// if the value is not null or empty.
@@ -32,14 +32,14 @@ namespace RimWorld_Mod_Structure_Builder
             element.Add(new XElement(name, value));
         }
         
-        
         /// <summary>
         /// Returns the first file found with the given search pattern
         /// </summary>
         /// <param name="path">The path to search in</param>
         /// <param name="searchPattern">The search pattern to look for</param>
         /// <returns>The path of the first found file, or null if not found</returns>
-        public static string FirstFoundFile(string path, string searchPattern) => Directory.EnumerateFiles(path, searchPattern).FirstOrDefault();
+        public static string FirstFoundFile(string path, string searchPattern) => 
+            Directory.Exists(path) ? Directory.EnumerateFiles(path, searchPattern).FirstOrDefault() : null;
         
         /// <summary>
         /// Returns the path to the RimWorld mods folder.
@@ -54,13 +54,18 @@ namespace RimWorld_Mod_Structure_Builder
             var modFolder = Path.Combine(rimWorldFolder, "Mods");
             if (!Directory.Exists(modFolder))
             {
-                Console.WriteLine("Default RimWorld mod folder not found.");
-                modFolder = GetSingleInput("Please enter the path to your RimWorld mod folder:");
-                if (!Directory.Exists(modFolder))
-                {
-                    Console.WriteLine("The specified folder does not exist.");
-                    return null;
-                }
+                AnsiConsole.MarkupLine("[yellow]⚠[/] Default RimWorld mod folder not found.");
+                
+                modFolder = AnsiConsole.Prompt(
+                    new TextPrompt<string>("[yellow]Enter path to RimWorld mod folder:[/]")
+                        .PromptStyle("yellow")
+                        .ValidationErrorMessage("[red]That's not a valid path[/]")
+                        .Validate(path =>
+                        {
+                            return Directory.Exists(path)
+                                ? ValidationResult.Success()
+                                : ValidationResult.Error("[red]Folder does not exist[/]");
+                        }));
             }
 
             return modFolder;
@@ -91,90 +96,23 @@ namespace RimWorld_Mod_Structure_Builder
                     ".steam", "steam", "steamapps", "common", "RimWorld");
             }
 
-            while (!Directory.Exists(rimWorldFolder))
+            if (!Directory.Exists(rimWorldFolder))
             {
-                Console.WriteLine("Default RimWorld folder not found.");
-                rimWorldFolder = GetSingleInput("Please enter the path to your RimWorld folder:");
-                if (!Directory.Exists(rimWorldFolder))
-                {
-                    Console.WriteLine("The specified folder does not exist.");
-                }
+                AnsiConsole.MarkupLine("[yellow]⚠[/] Default RimWorld folder not found.");
+                
+                rimWorldFolder = AnsiConsole.Prompt(
+                    new TextPrompt<string>("[yellow]Enter path to RimWorld folder:[/]")
+                        .PromptStyle("yellow")
+                        .ValidationErrorMessage("[red]That's not a valid path[/]")
+                        .Validate(path =>
+                        {
+                            return Directory.Exists(path)
+                                ? ValidationResult.Success()
+                                : ValidationResult.Error("[red]Folder does not exist[/]");
+                        }));
             }
 
             return rimWorldFolder;
-        }
-
-        /// <summary>
-        /// Asks the user for a single input.
-        /// If the input is required, the user is prompted until a non-empty value is entered.
-        /// </summary>
-        /// <param name="prompt">The prompt to display</param>
-        /// <param name="required">Whether the input is required</param>
-        /// <returns>The input entered by the user</returns>
-        public static string GetSingleInput(string prompt, bool required = true)
-        {
-            Logging.Debug($"{prompt} {(required ? "" : "(Optional)")}");
-            var input = Console.ReadLine()?.Trim();
-
-            while (string.IsNullOrEmpty(input) && required)
-            {
-                Logging.Error("Please enter a value! (Required)");
-                input = Console.ReadLine()?.Trim();
-            }
-            Logging.Log("");
-
-            return input;
-        }
-
-        /// <summary>
-        /// Asks the user for multiple inputs.
-        /// The user is prompted to enter values until an empty string is entered.
-        /// </summary>
-        /// <param name="prompt">The prompt to display</param>
-        /// <returns>A list of all the input entered by the user</returns>
-        public static List<string> GetMultipleInputs(string prompt)
-        {
-            var inputs = new List<string>();
-
-            Logging.Debug(prompt);
-            string input;
-            do
-            {
-                input = Console.ReadLine()?.Trim();
-                if (!string.IsNullOrEmpty(input))
-                {
-                    inputs.Add(input);
-                }
-            } while (!string.IsNullOrEmpty(input));
-            Logging.Log("");
-
-            return inputs;
-        }
-
-        /// <summary>
-        /// Asks the user a yes/no question.
-        /// The user is prompted until a valid 'y' or 'n' is entered.
-        /// </summary>
-        /// <param name="prompt">The prompt to display</param>
-        /// <returns>True if the user entered 'y', false if the user entered 'n'</returns>
-        public static bool GetYesNoInput(string prompt)
-        {
-            while (true)
-            {
-                Logging.Debug($"{prompt} (y/n)");
-                var input = Console.ReadLine().Trim().ToLower();
-                if (input == "y") return true;
-                if (input == "n") return false;
-                Logging.Error("Invalid input. Please enter 'y' or 'n'.");
-            }
-        }
-
-        public static void CreateDirectory(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
         }
 
         /// <summary>
@@ -192,8 +130,12 @@ namespace RimWorld_Mod_Structure_Builder
             var csProjGuid = Guid.NewGuid();
             var solutionGuid = Guid.NewGuid();
             
+            // Create project folder
+            var projectFolder = Path.Combine(sourcePath, projectName);
+            Directory.CreateDirectory(projectFolder);
+            
             // Create .csproj file
-                File.WriteAllText(Path.Combine(sourcePath, $"{projectName}.csproj"), $@"
+            File.WriteAllText(Path.Combine(projectFolder, $"{projectName}.csproj"), $@"
 <?xml version=""1.0"" encoding=""utf-8""?>
 <!-- Created with RW Mod Structure Builder -->
 <Project ToolsVersion=""15.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
@@ -257,8 +199,8 @@ namespace RimWorld_Mod_Structure_Builder
   <Import Project=""$(MSBuildToolsPath)\Microsoft.CSharp.targets"" />
 </Project>".Trim());
 
-                // Create .sln file in the main ModFolder
-                File.WriteAllText(Path.Combine(sourcePath, $"{projectName}.sln"), $@"
+            // Create .sln file
+            File.WriteAllText(Path.Combine(sourcePath, $"{projectName}.sln"), $@"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17 || Created with RW Mod Structure Builder
 VisualStudioVersion = 17.0.31903.59
@@ -284,8 +226,8 @@ Global
 	EndGlobalSection
 EndGlobal".Trim());
 
-                // Create a C# main file
-                File.WriteAllText(Path.Combine(sourcePath, $"{projectName}.cs"), $@"
+            // Create main C# file
+            File.WriteAllText(Path.Combine(projectFolder, $"{projectName}.cs"), $@"
 using RimWorld;
 using Verse;
 
@@ -301,8 +243,9 @@ namespace {projectName}
         }}
     }}
 }}".Trim());
-                // Create a C# settings file
-                File.WriteAllText(Path.Combine(sourcePath, $"Settings.cs"), $@"
+
+            // Create settings file
+            File.WriteAllText(Path.Combine(projectFolder, $"Settings.cs"), $@"
 using Verse;
 
 namespace {projectName}
@@ -320,8 +263,9 @@ namespace {projectName}
         }}
     }}
 }}".Trim());
-                // Create a C# mod file
-                File.WriteAllText(Path.Combine(sourcePath, $"Mod.cs"), $@"
+
+            // Create mod file
+            File.WriteAllText(Path.Combine(projectFolder, $"Mod.cs"), $@"
 using UnityEngine;
 using Verse;
 
@@ -359,10 +303,10 @@ namespace {projectName}
     }}
 }}".Trim());
 
-                // Create Properties folder and AssemblyInfo.cs
-                var propertiesPath = Path.Combine(sourcePath, "Properties");
-                Utils.CreateDirectory(propertiesPath);
-                File.WriteAllText(Path.Combine(propertiesPath, "AssemblyInfo.cs"), $@"
+            // Create Properties folder and AssemblyInfo.cs
+            var propertiesPath = Path.Combine(projectFolder, "Properties");
+            Directory.CreateDirectory(propertiesPath);
+            File.WriteAllText(Path.Combine(propertiesPath, "AssemblyInfo.cs"), $@"
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -373,7 +317,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle(""{projectName}"")]
 [assembly: AssemblyDescription(""{description}"")]
 [assembly: AssemblyConfiguration("""")]
-[assembly: AssemblyCompany(""{authors.Select(a => a).Aggregate((a, b) => $"{a}, {b}")}"")]
+[assembly: AssemblyCompany(""{string.Join(", ", authors)}"")]
 [assembly: AssemblyProduct(""{projectName}"")]
 [assembly: AssemblyCopyright(""Copyright © {DateTime.Now.Year}"")]
 [assembly: AssemblyTrademark("""")]
